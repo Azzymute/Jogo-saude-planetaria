@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo Emergência Mundial</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f2;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1, h2 {
+      color: #2e5949;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: #ffffff;
+      border: 2px solid #2e5949;
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+      min-height: 150px;
+      transition: all 0.3s ease-in-out;
+    }
+    .card.drag-over {
+      border: 2px dashed #4caf50;
+      background-color: #f1fff4;
+    }
+    .card.fade-out {
+      animation: fadeOut 0.6s forwards;
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.05); }
+    }
+    .card h3 {
+      margin-top: 0;
+      color: #2e5949;
+    }
+    .card p {
+      font-size: 0.95rem;
+    }
+    .gtis {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .gti {
+      background-color: #2e5949;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      cursor: grab;
+      transition: opacity 0.3s;
+    }
+    .gti:active {
+      cursor: grabbing;
+    }
+    .gti.usado {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .status, #historico {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #eaf7f2;
+      border: 1px solid #c5e2d5;
+      border-radius: 0.5rem;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 1rem;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+      color: #2e5949;
+    }
+    .modal-content button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background: #2e5949;
+      color: #fff;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo: Emergência Mundial</h1>
+
+  <p style="max-width: 800px; font-size: 1.1rem; margin-bottom: 2rem;">
+    Bem-vindo ao <strong>Jogo Emergência Mundial</strong>! Aqui, você enfrentará uma série de problemas ambientais que afetam o cotidiano das escolas e comunidades. Seu desafio é analisar cada situação e escolher, entre os <strong>GTIs (Grupos de Trabalho Interdisciplinares)</strong>, aquele que melhor oferece uma solução.
+    <br><br>
+    Para jogar, basta <strong>arrastar uma das cartas de GTI</strong>, que estão no final da página, e <strong>soltar sobre o evento</strong> que você acha que aquele GTI pode resolver. Você receberá um feedback se acertou ou errou — inclusive com um som!
+    <br><br>
+    Boa sorte e use sua criatividade para salvar o planeta! 🌎
+  </p>
+
+  <h2>Eventos Ativos</h2>
+  <div class="board" id="eventos"></div>
+
+  <h2>Cartas de GTIs</h2>
+  <div class="gtis" id="cartasGTI"></div>
+
+  <div class="status" id="status">
+    <strong>Status:</strong> 9 eventos ativos | Nível de Emergência: 9 | Esperança ativa: 0 pontos
+  </div>
+
+  <div id="historico" class="status">
+    <strong>Histórico:</strong>
+    <ul id="listaHistorico"></ul>
+  </div>
+
+  <button onclick="reiniciarJogo()">🔁 Reiniciar Jogo</button>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h3 id="modalTitle">GTI</h3>
+      <p id="modalText">Texto do GTI</p>
+      <button onclick="fecharModal()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    const eventos = [
+      { id: "evento1", titulo: "🌡️ Onda de Calor", descricao: "Temperaturas extremas prejudicam o ambiente escolar.", gti: "engenharia" },
+      { id: "evento2", titulo: "🦟 Surto de Dengue", descricao: "Alta proliferação do mosquito em áreas escolares.", gti: "ciencia" },
+      { id: "evento3", titulo: "🍔 Merenda Ultraprocessada", descricao: "Alunos sem acesso a alimentação saudável.", gti: "sistemas" },
+      { id: "evento4", titulo: "📱 Fake News Climática", descricao: "Desinformação sobre o clima se espalha nas redes.", gti: "comunicacao" },
+      { id: "evento5", titulo: "🌳 Desmatamento Local", descricao: "Perda da biodiversidade próxima à escola.", gti: "artes" },
+      { id: "evento6", titulo: "📚 Desconhecimento Climático", descricao: "Estudantes não entendem a crise climática.", gti: "educacao" },
+      { id: "evento7", titulo: "🏥 Crise Respiratória", descricao: "Aumento de doenças respiratórias por má qualidade do ar.", gti: "saude" },
+      { id: "evento8", titulo: "⚖️ Escola em Área Vulnerável", descricao: "Enchentes e calor intenso afetam os mais pobres.", gti: "justica" },
+      { id: "evento9", titulo: "🌱 Falta de Natureza", descricao: "Espaços escolares sem áreas verdes ou árvores de sombra.", gti: "infra" }
+    ];
+
+    const gtis = [
+      { id: "engenharia", nome: "GTI Engenharia 🌳" },
+      { id: "ciencia", nome: "GTI Ciência Cidadã 🔬" },
+      { id: "sistemas", nome: "GTI Sistemas Alimentares 🥕" },
+      { id: "comunicacao", nome: "GTI Comunicação 📣" },
+      { id: "artes", nome: "GTI Artes 🎭" },
+      { id: "educacao", nome: "GTI Educação Climática 📚" },
+      { id: "saude", nome: "GTI Saúde Pública 🏥" },
+      { id: "justica", nome: "GTI Justiça Climática ⚖️" },
+      { id: "infra", nome: "GTI Infraestrutura Verde 🌿" }
+    ];
+
+    function allowDrop(ev) {
+      ev.preventDefault();
+      ev.currentTarget.classList.add("drag-over");
+    }
+
+    function dragLeave(ev) {
+      ev.currentTarget.classList.remove("drag-over");
+    }
+
+    function drag(ev) {
+      ev.dataTransfer.setData("gti", ev.target.id);
+    }
+
+    function drop(ev) {
+      ev.preventDefault();
+      const gti = ev.dataTransfer.getData("gti");
+      const alvo = ev.currentTarget;
+      const esperado = alvo.getAttribute("data-gti");
+
+      if (gti === esperado) {
+        alvo.style.backgroundColor = "#d4edda";
+        alvo.innerHTML += `<p><strong>✅ Resolvido com ${gti.toUpperCase()}</strong></p>`;
+        tocarSomAcerto();
+        registrarHistorico(`✅ Evento resolvido com o GTI ${gti.toUpperCase()}`);
+      } else {
+        alvo.style.backgroundColor = "#f8d7da";
+        alvo.innerHTML += `<p><strong>❌ ${gti.toUpperCase()} não resolve</strong></p>`;
+        tocarSomErro();
+        registrarHistorico(`❌ Tentativa inválida com o GTI ${gti.toUpperCase()}`);
+      }
+    }
+
+    function tocarSomAcerto() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(660, ctx.currentTime);
+      g.gain.setValueAtTime(0.2, ctx.currentTime);
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.3);
+    }
+
+    function tocarSomErro() {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(220, ctx.currentTime);
+      g.gain.setValueAtTime(0.2, ctx.currentTime);
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.3);
+    }
+
+    function gerarCartas() {
+      const containerEventos = document.getElementById("eventos");
+      eventos.forEach(ev => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.id = ev.id;
+        div.setAttribute("data-gti", ev.gti);
+        div.setAttribute("ondragover", "allowDrop(event)");
+        div.setAttribute("ondragleave", "dragLeave(event)");
+        div.setAttribute("ondrop", "drop(event)");
+        div.innerHTML = `<h3>${ev.titulo}</h3><p>${ev.descricao}</p>`;
+        containerEventos.appendChild(div);
+      });
+
+      const containerGTI = document.getElementById("cartasGTI");
+      gtis.forEach(gti => {
+        const div = document.createElement("div");
+        div.className = "gti";
+        div.id = gti.id;
+        div.setAttribute("draggable", "true");
+        div.setAttribute("ondragstart", "drag(event)");
+        div.textContent = gti.nome;
+        containerGTI.appendChild(div);
+      });
+    }
+
+    function registrarHistorico(msg) {
+      const li = document.createElement('li');
+      li.innerText = msg;
+      document.getElementById('listaHistorico').appendChild(li);
+    }
+
+    function reiniciarJogo() {
+      location.reload();
+    }
+
+    function fecharModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    gerarCartas();
+  </script>
+</body>
+</html>
