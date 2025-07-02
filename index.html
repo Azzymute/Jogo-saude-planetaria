@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo Emergência Mundial</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f2;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1, h2 {
+      color: #2e5949;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: #ffffff;
+      border: 2px solid #2e5949;
+      border-radius: 1rem;
+      padding: 1rem;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      margin-top: 0;
+      color: #2e5949;
+    }
+    .card p {
+      font-size: 0.95rem;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .button {
+      background-color: #2e5949;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #3f7c64;
+    }
+    .status {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #eaf7f2;
+      border: 1px solid #c5e2d5;
+      border-radius: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo: Emergência Mundial</h1>
+  <h2>Eventos Ativos</h2>
+  <div class="board" id="eventos">
+    <div class="card" id="evento1">
+      <h3>🌡️ Onda de Calor na Escola</h3>
+      <p>Temperaturas extremas estão prejudicando a saúde dos alunos. O pátio não tem sombra e não há ventilação nas salas.</p>
+      <p><strong>Solução ideal:</strong> GTI Engenharia</p>
+    </div>
+    <div class="card" id="evento2">
+      <h3>🦟 Surto de Dengue</h3>
+      <p>O mosquito Aedes aegypti se espalhou com mais força. A escola está em área de risco.</p>
+      <p><strong>Solução ideal:</strong> GTI Ciência Cidadã</p>
+    </div>
+    <div class="card" id="evento3">
+      <h3>🍔 Merenda Ultraprocessada</h3>
+      <p>Falta acesso a alimentos frescos. Os estudantes consomem principalmente produtos industrializados.</p>
+      <p><strong>Solução ideal:</strong> GTI Sistemas Alimentares</p>
+    </div>
+    <div class="card" id="evento4">
+      <h3>📱 Fake News Climática</h3>
+      <p>Estudantes compartilham desinformação sobre mudanças climáticas nas redes sociais.</p>
+      <p><strong>Solução ideal:</strong> GTI Comunicação</p>
+    </div>
+    <div class="card" id="evento5">
+      <h3>🌳 Desmatamento em Área Próxima</h3>
+      <p>A comunidade escolar está preocupada com a perda da biodiversidade ao redor.</p>
+      <p><strong>Solução ideal:</strong> GTI Artes</p>
+    </div>
+  </div>
+
+  <h2>Ações dos GTIs</h2>
+  <div class="actions">
+    <button class="button" onclick="resolverEvento('engenharia')">GTI Engenharia 🌳</button>
+    <button class="button" onclick="resolverEvento('sistemas')">GTI Sistemas Alimentares 🥕</button>
+    <button class="button" onclick="resolverEvento('comunicacao')">GTI Comunicação 📣</button>
+    <button class="button" onclick="resolverEvento('ciencia')">GTI Ciência Cidadã 🔬</button>
+    <button class="button" onclick="resolverEvento('artes')">GTI Artes 🎭</button>
+  </div>
+
+  <div class="status" id="status">
+    <strong>Status:</strong> 5 eventos ativos | Nível de Emergência: 5 | Esperança ativa: 0 pontos
+  </div>
+
+  <script>
+    let eventos = {
+      engenharia: 'evento1',
+      ciencia: 'evento2',
+      sistemas: 'evento3',
+      comunicacao: 'evento4',
+      artes: 'evento5'
+    };
+    let emergencias = 5;
+    let pontos = 0;
+
+    function resolverEvento(gti) {
+      let eventoId = eventos[gti];
+      let eventoDiv = document.getElementById(eventoId);
+      if (eventoDiv && eventoDiv.style.display !== 'none') {
+        eventoDiv.style.display = 'none';
+        emergencias--;
+        pontos += 5;
+        atualizarStatus(`Você aplicou uma solução do GTI ${gti.toUpperCase()}!`);
+      } else {
+        atualizarStatus(`Essa ação não resolveu nenhum novo evento.`);
+      }
+
+      if (emergencias === 0) {
+        document.getElementById('status').innerHTML += '<br><strong>🌟 Parabéns! Você resolveu todas as emergências e sua escola virou referência em Saúde Planetária!</strong>';
+      }
+    }
+
+    function atualizarStatus(mensagem) {
+      document.getElementById('status').innerHTML = `<strong>Status:</strong> ${emergencias} eventos ativos | Nível de Emergência: ${emergencias} | Esperança ativa: ${pontos} pontos<br>${mensagem}`;
+    }
+  </script>
+</body>
+</html>
